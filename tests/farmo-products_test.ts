@@ -8,7 +8,7 @@ import {
 import { assertEquals } from 'https://deno.land/std@0.90.0/testing/asserts.ts';
 
 Clarinet.test({
-  name: "Ensure can register new product",
+  name: "Ensure can register new product with history tracking",
   async fn(chain: Chain, accounts: Map<string, Account>) {
     const owner = accounts.get("wallet_1")!;
     
@@ -27,11 +27,21 @@ Clarinet.test({
     ]);
     
     assertEquals(block.receipts[0].result, "(ok true)");
+    
+    // Check product history
+    let historyResult = chain.callReadOnlyFn(
+      "farmo-products",
+      "get-product-history",
+      [types.uint(1)],
+      owner.address
+    );
+    
+    assertEquals(historyResult.result.includes("registered"), true);
   }
 });
 
 Clarinet.test({
-  name: "Ensure can transfer product ownership",
+  name: "Ensure can transfer product ownership with history tracking",
   async fn(chain: Chain, accounts: Map<string, Account>) {
     const owner = accounts.get("wallet_1")!;
     const newOwner = accounts.get("wallet_2")!;
@@ -49,5 +59,15 @@ Clarinet.test({
     ]);
     
     assertEquals(block.receipts[0].result, "(ok true)");
+    
+    // Check transfer history
+    let historyResult = chain.callReadOnlyFn(
+      "farmo-products",
+      "get-product-history",
+      [types.uint(1)],
+      owner.address
+    );
+    
+    assertEquals(historyResult.result.includes("transfer"), true);
   }
 });
